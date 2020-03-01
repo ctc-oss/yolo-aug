@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 for i in range(len(bbs_aug.bounding_boxes)):
                     bb = bbs_aug.bounding_boxes[i]
 
-                    if bb and not bb.area > 0:
+                    if bb and bb.area > 0:
                         x, y, w, h = xyxy_to_yolo(imsz, bb)
                         txt_out.write(f'{bb.label} {x} {y} {w} {h}\n')
         else:
