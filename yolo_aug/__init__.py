@@ -27,3 +27,18 @@ def xyxy_to_yolo(sz, box):
     h = h0 * dh
 
     return [x, y, w, h]
+
+
+def load_pipeline(pipeline_arg):
+    pipeline_package = 'yolo_aug.pipelines'
+    pipeline_name = 'default'
+
+    if pipeline_arg:
+        pipeline_splits = pipeline_arg.rsplit('.', 1)
+        if len(pipeline_splits) == 2:
+            pipeline_package = pipeline_splits[0]
+            pipeline_name = pipeline_splits[1]
+        else:
+            pipeline_name = pipeline_splits[0]
+
+    return getattr(__import__(pipeline_package, fromlist=[pipeline_name]), pipeline_name)
