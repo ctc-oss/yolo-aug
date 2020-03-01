@@ -38,12 +38,10 @@ if __name__ == "__main__":
                     iaboxes.append(ia.BoundingBox(x1=b[0], y1=b[1], x2=b[2], y2=b[3], label=splits[0]))
 
             bbs = ia.BoundingBoxesOnImage(iaboxes, shape=imsz)
-
-            img_aug = aug_pipeline.augment_images([im])[0]
-            bbs_aug = aug_pipeline.augment_bounding_boxes([bbs])[0]
+            img_aug, bbs_aug = aug_pipeline(image=im, bounding_boxes=bbs)
 
             if args.debug:
-                img_aug = bbs.draw_on_image(img_aug, thickness=1, color=[255, 0, 0])
+                img_aug = bbs.draw_on_image(img_aug, thickness=1, color=[128, 0, 0], alpha=.5)
                 img_aug = bbs_aug.draw_on_image(img_aug, thickness=3, color=[0, 255, 0])
 
             aug_chip = f'{chip_name}a'
