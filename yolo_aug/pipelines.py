@@ -1,6 +1,8 @@
 from imgaug import augmenters as iaa
+from imgaug import parameters as iap
 
 
+# https://imgaug.readthedocs.io/en/latest/source/examples_basics.html#a-simple-and-common-augmentation-sequence
 def default():
     return iaa.Sequential([
         iaa.Fliplr(0.5),  # horizontal flips
@@ -27,3 +29,36 @@ def default():
             shear=(-8, 8)
         )
     ], random_order=True)
+
+
+# https://imgaug.readthedocs.io/en/latest/source/parameters.html#introduction
+def stochastic():
+    return iaa.Sequential([
+        iaa.GaussianBlur(
+            sigma=iap.Uniform(0.0, 1.0)
+        ),
+        iaa.ContrastNormalization(
+            iap.Choice(
+                [1.0, 1.5, 3.0],
+                p=[0.5, 0.3, 0.2]
+            )
+        ),
+        iaa.Affine(
+            rotate=iap.Normal(0.0, 30),
+            translate_px=iap.RandomSign(iap.Poisson(3))
+        ),
+        iaa.AddElementwise(
+            iap.Discretize(
+                (iap.Beta(0.5, 0.5) * 2 - 1.0) * 64
+            )
+        ),
+        iaa.Multiply(
+            iap.Positive(iap.Normal(0.0, 0.1)) + 1.0
+        )
+    ])
+
+
+def blur():
+    return iaa.Sequential([
+        iaa.MotionBlur()
+    ])
