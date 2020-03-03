@@ -1,6 +1,7 @@
 import glob
 import os
 
+import logging
 import configargparse as argparse
 import imgaug as ia
 import numpy as np
@@ -14,15 +15,28 @@ if __name__ == "__main__":
     parser.add_argument("--format", type=str, default='jpg', help="Image format (default jpg)")
     parser.add_argument("--pipeline", type=str, help="Name of pipeline function to run")
     parser.add_argument("--debug", action='store_true', help='Debug mode')
+    parser.add_argument("--chip_dir", type=str, default='chipped', help='Debug mode')
     args = parser.parse_args()
 
-    root = args.yolo_dir
-    if not os.path.isdir(root):
-        raise SystemError(f'invalid yolo directory {root}')
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("yolo")
+
+    yolo_dir = args.yolo_dir
+    if not os.path.isdir(yolo_dir):
+        raise SystemError(f'invalid yolo directory {yolo_dir}')
+
+    training_list_txt = os.path.join(yolo_dir, 'training_list.txt')
+    if not os.path.exists(training_list_txt):
+        raise SystemError(f'invalid yolo training list {training_list_txt}')
+
+    chip_dir = os.path.join(yolo_dir, args.chip_dir)
+    if not os.path.isdir(chip_dir):
+        raise SystemError(f'invalid yolo chip directory {chip_dir}')
 
     aug_pipeline = load_pipeline(args.pipeline)()
+    aug_chips = []
 
-    for txt_path in glob.glob(os.path.join(root, "*.txt")):
+    for txt_path in glob.glob(os.path.join(chip_dir, "*.txt")):
         chip_name = os.path.splitext(txt_path)[0]
         img_path = f'{chip_name}.{args.format}'
         if os.path.isfile(img_path):
@@ -41,16 +55,22 @@ if __name__ == "__main__":
             img_aug, bbs_aug = aug_pipeline(image=im, bounding_boxes=bbs)
 
             if args.debug:
-                img_aug = bbs.draw_on_image(img_aug, thickness=1, color=[128, 0, 0], alpha=.5)
-                img_aug = bbs_aug.draw_on_image(img_aug, thickness=3, color=[0, 255, 0])
+                img_aug = bbs.draw_on_image(img_aug, size=1, color=[128, 0, 0], alpha=.5)
+                img_aug = bbs_aug.draw_on_image(img_aug, size=2, color=[0, 255, 0])
 
-            aug_chip = f'{chip_name}a'
-            with open(f'{aug_chip}.{args.format}', 'wb') as img_out, open(f'{aug_chip}.txt', 'w') as txt_out:
+            chip = f'{chip_name}a'
+            img_chip = f'{chip}.{args.format}'
+            txt_chip = f'{chip}.txt'
+            with open(img_chip, 'wb') as img_out, \
+                    open(txt_chip, 'w') as txt_out, \
+                    open(training_list_txt, 'a') as training_list:
+
                 outfmt = args.format
                 if outfmt == 'jpg':
                     outfmt = 'jpeg'
 
                 Image.fromarray(img_aug).save(img_out, format=outfmt)
+                training_list.write(f'{img_chip}\n')
 
                 for i in range(len(bbs_aug.bounding_boxes)):
                     bb = bbs_aug.bounding_boxes[i]
@@ -61,3 +81,5 @@ if __name__ == "__main__":
         else:
             # todo;; log warning
             continue
+
+    logger.info(f'file://{yolo_dir}')
