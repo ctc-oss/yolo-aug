@@ -1,7 +1,8 @@
 import glob
-import os
-
 import logging
+import os
+import sys
+
 import configargparse as argparse
 import imgaug as ia
 import numpy as np
@@ -9,14 +10,15 @@ from PIL import Image
 
 from . import yolo_to_xyxy, xyxy_to_yolo, load_pipeline
 
-if __name__ == "__main__":
+
+def main(*argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("yolo_dir", type=str, help="YOLO directory")
     parser.add_argument("--format", type=str, default='jpg', help="Image format (default jpg)")
     parser.add_argument("--pipeline", type=str, help="Name of pipeline function to run")
     parser.add_argument("--debug", action='store_true', help='Debug mode')
     parser.add_argument("--chip_dir", type=str, default='chipped', help='Debug mode')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("yolo")
@@ -83,3 +85,8 @@ if __name__ == "__main__":
             continue
 
     logger.info(f'file://{yolo_dir}')
+
+
+if __name__ == "__main__":
+    main(*sys.argv[1:])
+
